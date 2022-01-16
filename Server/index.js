@@ -35,8 +35,17 @@ io.on('connect', (socket) => {
 
     socket.join(user.room);
 
-    socket.emit('message', { user: 'admin', text: `${user.name}, welcome to room ${user.room}.` });
-    socket.broadcast.to(user.room).emit('message', { user: 'admin', text: `${user.name} has joined!` });
+    socket.emit('message', { 
+      user: 'Admin',
+      type: 'text', 
+      message: `${user.name}, welcome to room ${user.room}.`
+    });
+    
+    socket.broadcast.to(user.room).emit('message', { 
+      user: 'Admin', 
+      type: 'text', 
+      message: `${user.name} has joined!` 
+    });
 
     io.to(user.room).emit('roomData', { room: user.room, users: users.getUsersInRoom(user.room) });
 
@@ -45,7 +54,23 @@ io.on('connect', (socket) => {
 
   socket.on('sendMessage', (message, callback) => {
     const user = users.getUser(socket.id);
-    io.to(user.room).emit('message', { user: user.name, text: message });
+    io.to(user.room).emit('message', { 
+      user: user.name,
+      type: message.type, 
+      message: message.body
+    });
+    callback();
+  });
+
+  socket.on('sendFile', (message, callback) => {
+    const user = users.getUser(socket.id);
+    io.to(user.room).emit('message', { 
+      user: user.name,
+      type: message.type,
+      file: message.body,
+      fileName: message.fileName,
+      mimeType: message.mimeType
+     });
     callback();
   });
 
@@ -53,7 +78,11 @@ io.on('connect', (socket) => {
     const user = users.removeUser(socket.id);
 
     if (user) {
-      io.to(user.room).emit('message', { user: 'Admin', text: `${user.name} has left.` });
+      io.to(user.room).emit('message', { 
+        user: 'Admin',
+        type: 'text', 
+        message: `${user.name} has left.` 
+      });
       io.to(user.room).emit('roomData', { room: user.room, users: users.getUsersInRoom(user.room) });
     }
   });
