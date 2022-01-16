@@ -7,7 +7,7 @@ import InfoBar from '../InfoBar/InfoBar';
 import Input from '../Input/Input';
 import Grid from '@mui/material/Grid';
 
-const ENDPOINT = 'https://isubhra-socket-chat.herokuapp.com/';
+const ENDPOINT = '/';
 
 let socket;
 
@@ -16,6 +16,7 @@ const Chat = ({ location }) => {
   const [room, setRoom] = useState('');
   const [users, setUsers] = useState('');
   const [message, setMessage] = useState('');
+  const [file, setFile] = useState();
   const [messages, setMessages] = useState([]);
 
   useEffect(() => {
@@ -47,32 +48,33 @@ const Chat = ({ location }) => {
     event.preventDefault();
 
     if (message) {
-      socket.emit('sendMessage', message, () => setMessage(''));
+      const messageObject = {
+        type: 'text',
+        body: message
+      }
+      socket.emit('sendMessage', messageObject, () => setMessage(''));
+    }
+
+    if (file) {
+      const fileObject = {
+        type: 'file',
+        body: file[0],
+        mimeType: file[0].type,
+        fileName: file[0].name
+      }
+      socket.emit('sendFile', fileObject, () => setFile(''));
     }
   }
 
   return (
-    <Grid
-      sx={{ overflow: 'hidden' }}
-      container>
-      <Grid 
-      item 
-      xs={12} 
-      display={{ xs: 'none', md: 'block', lg: 'block' }}
-      md={3}
-      lg={3}
-      sx={{ height: '100vh' }}>
+    <Grid sx={{ overflow: 'hidden' }} container>
+      <Grid item xs={12} display={{ xs: 'none', md: 'block', lg: 'block' }} md={3} lg={3} sx={{ height: '100vh' }}>
         <Users users={users} room={room} />
       </Grid>
-      <Grid 
-      item 
-      xs={12} 
-      md={9}
-      lg={9}
-      sx={{ height: '100vh' }}>
+      <Grid item xs={12} md={9} lg={9} sx={{ height: '100vh' }}>
         <InfoBar room={room} name={name} />
         <Messages messages={messages} name={name} />
-        <Input message={message} setMessage={setMessage} sendMessage={sendMessage} />
+        <Input message={message} setMessage={setMessage} setFile={setFile} sendMessage={sendMessage} />
       </Grid>
     </Grid>
   );
